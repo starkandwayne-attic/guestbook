@@ -11,6 +11,8 @@ import (
     _"strings"
 )
 
+var DB database.PostgresDB
+
 func main() {
     var postgresUri string
     var useCFEnv bool
@@ -34,16 +36,26 @@ func main() {
         }
     }
 
-    //var DB database.PostgresDB = database.UsePostgresDB(postgresUri)
+    DB = database.UsePostgresDB(postgresUri)
     //DB.EnsureStructure()
     r := mux.NewRouter()
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
     http.Handle("/", r)
-    http.HandleFunc("/fnord", TestHandler)
+    http.HandleFunc("/submit", SubmitHandler)
+    http.HandleFunc("/posts/random", RandomPostHandler)
     http.ListenAndServe(":8080", nil)
 }
 
-func TestHandler(w http.ResponseWriter, r *http.Request) {
+func SubmitHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == "POST" {
+       response := api.PostSubmitHandler(w, r, &DB)
+    }
+}
+
+func RandomPostHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == "GET" {
+        
+    }
     fmt.Fprintf(w, "asdf")
 }
