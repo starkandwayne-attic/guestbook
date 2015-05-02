@@ -2,13 +2,8 @@ package database
 
 import (
     "database/sql"
-    "encoding/json"
     "errors"
     "reflect"
-    "strings"
-    "strconv"
-    "time"
-    _ "github.com/coopernurse/gorp"
     _ "github.com/lib/pq"
 )
 
@@ -29,26 +24,26 @@ func (db *PostgresDB) connect() (*sql.DB, error) {
     return conn, nil
 }
 
-
-func (db *PostgresDB) SelectPostById(post_id string) (*database.DBResult, error) {
-    docCollection := make([]database.DBResult,0)
+func (db *PostgresDB) SelectPostById(post_id int64) (DBResult, error) {
+    docCollection := make([]DBResult,0)
 
     sqlQuery := "SELECT id, url, title, phrase FROM posts WHERE id = $1"
 
     sqlParams := make([]interface{},1)
     sqlParams[0] = post_id
 
-    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
+    err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
-        return database.DBResult{}, err
+        return DBResult{}, err
     }
     if len(docCollection) > 0 {
-        return &docCollection[0]
+        return docCollection[0], nil
     }
+    return DBResult{}, errors.New("No posts found with that id!")
 }
 
-func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool) {
-    docCollection := make([]database.DBResult,0)
+func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool, error) {
+    docCollection := make([]DBResult,0)
 
     sqlQuery := "SELECT id FROM entries WHERE email = $1 AND url = $2"
 
@@ -56,18 +51,18 @@ func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool) {
     sqlParams[0] = email
     sqlParams[1] = url
 
-    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
+    err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
-        return database.DBResult{}, err
+        return true, err
     }
     if len(docCollection) > 0 {
-        return true
+        return true, nil
     }
-    return false
+    return false, nil
 }
 
-func (db *PostgresDB) SelectRandomPost() (*database.DBResult, error) {
-    docCollection := make([]database.DBResult,0)
+func (db *PostgresDB) SelectRandomPost() (DBResult, error) {
+    docCollection := make([]DBResult,0)
 
     sqlQuery := "SELECT id, url, title FROM posts p, "
     sqlQuery += "(SELECT cast(trunc(random() * count(*) + 1) as bigint) as post_id FROM posts) rand_id "
@@ -75,14 +70,37 @@ func (db *PostgresDB) SelectRandomPost() (*database.DBResult, error) {
 
     sqlParams := make([]interface{},0)
 
-    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
+    err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
-        return database.DBResult{}, err
+        return DBResult{}, err
     }
     if len(docCollection) > 0 {
-        return &docCollection[0]
+        return docCollection[0], nil
     }
+    return DBResult{}, errors.New("No posts found!")
 }
+
+func (db *PostgresDB) InsertEntry(name string, email string, comment string, url string) (DBResult, error) {
+    docCollection := make([]DBResult,0)
+
+    sqlQuery := "INSERT INTO entries (name, email, comment, url) VALUES($1,$2,$3,$4) RETURNING *"
+
+    sqlParams := make([]interface{},4)
+    sqlParams[0] = name
+    sqlParams[1] = email
+    sqlParams[2] = comment
+    sqlParams[3] = url
+
+    err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
+    if err != nil {
+        return DBResult{}, err
+    }
+    if len(docCollection) > 0 {
+        return docCollection[0], nil
+    }
+    return DBResult{}, errors.New("Entry not inserted!")
+}
+
 
 func (db *PostgresDB) DoSelect(query string, queryParams []interface{}, selectTo *[]DBResult) (error) {
 	return db.doselect(query, queryParams, selectTo)
@@ -102,145 +120,17 @@ func (db *PostgresDB) doselect(query string, queryParams []interface{}, selectTo
     }
 
     parsedResults := db.parseResults(results)
-    retval := make([]DBResult,0)
-    for _, res := range parsedResults {
-        var dbr DBResult
-        err = json.Unmarshal([]byte(res["content"].(string)), &dbr)
-        if err != nil {
-            return err
-        }
-        retval = append(retval, dbr)
-    }
-    *selectTo = retval
+    //retval := make([]DBResult,0)
+    //for _, res := range parsedResults {
+    //    var dbr DBResult
+    //    err = json.Unmarshal([]byte(res["content"].(string)), &dbr)
+    //    if err != nil {
+    //        return err
+    //    }
+    //    retval = append(retval, dbr)
+    //}
+    *selectTo = parsedResults
     return nil
-}
-
-func (db *PostgresDB) Insert(insertInto string, insertObject DBResult, selectTo *DBResult) (error) {
-    now := time.Now().UTC()
-    insertObject.SetCreated(now)
-    insertObject.SetUpdated(now)
-
-    if insertObject.GetID() != "" {
-        queryMap := make(map[string]interface{})
-        queryMap["id"] = insertObject.GetID()
-
-        var existingDoc DBResult
-        err := db.SelectFirst(insertInto, queryMap, &existingDoc)
-        if existingDoc != nil && err == nil {
-            insertObject.SetCreated(existingDoc.GetCreated())
-        }
-    }
-
-    session, err := db.connect()
-    if err != nil {
-        return err
-    }
-    defer session.Close()
-
-    jsonToInsert, err := json.Marshal(insertObject)
-    if err != nil {
-        return err
-    }
-
-    insertParams := make([]interface{},4)
-    insertParams[0] = insertObject.GetID()
-    insertParams[1] = insertObject.GetCreated().Format(time.RFC3339)
-    insertParams[2] = insertObject.GetUpdated().Format(time.RFC3339)
-    insertParams[3] = string(jsonToInsert)
-
-    insertQuery := "INSERT INTO " + insertInto + " (id,created,updated,content)\n VALUES("
-    insertQuery += "$1,$2,$3,$4"
-    insertQuery += ") RETURNING *"
-
-    selectResults := make([]DBResult,0)
-    err = db.doselect(insertQuery, insertParams, &selectResults)
-    if err != nil {
-        return err
-    }
-    if len(selectResults) > 0 {
-        *selectTo = selectResults[0]
-    }
-    return nil
-}
-
-func (db *PostgresDB) Update(updateInto string, updateObject DBResult, selectTo *DBResult) (error) {
-    if updateObject.GetID() == "" {
-        err := errors.New("Cannot use Update without an ID.")
-        return err
-    }
-    now := time.Now().UTC()
-    updateObject.SetUpdated(now)
-
-    session, err := db.connect()
-    if err != nil {
-        return err
-    }
-    defer session.Close()
-
-    jsonToUpdate, err := json.Marshal(updateObject)
-    if err != nil {
-        return err
-    }
-
-    updateParams := make([]interface{},3)
-    updateParams[0] = jsonToUpdate
-    updateParams[1] = updateObject.GetUpdated().Format(time.RFC3339)
-    updateParams[2] = string(updateObject.GetID())
-
-
-    updateQuery := "UPDATE " + updateInto  + " SET content = jsonb_merge(content, $1),\n"
-    updateQuery += "updated = $2\n"
-    updateQuery += "WHERE id = $3\n"
-    updateQuery += "RETURNING *"
-
-    selectResults := make([]DBResult,0)
-    err = db.doselect(updateQuery, updateParams, &selectResults)
-    if err != nil {
-        return err
-    }
-    if len(selectResults) > 0 {
-        *selectTo = selectResults[0]
-    }
-    return nil
-}
-
-
-func (db *PostgresDB) buildWhereClauseFromMap(query map[string]interface{}, startParamsFrom int) (string, []interface{}) {
-    sqlWhere := ""
-    sqlParams := make([]interface{},0)
-    currentParam := startParamsFrom
-
-    for key, param := range query {
-        if sqlWhere == "" {
-            sqlWhere += "WHERE "
-        }
-        if sqlWhere != "WHERE " {
-            sqlWhere += " AND "
-        }
-        operator := "="
-        var value interface{} = param.(string)
-        if param == nil {
-            operator = "IS"
-            value = nil
-        }
-        if strings.Contains(key, ".") {
-            col := strings.Split(key, ".")[1]
-            sqlWhere += "cast(content->>$" + strconv.Itoa(currentParam) + " as text) " + operator + " $" + strconv.Itoa(currentParam+1)
-            sqlParams = append(sqlParams, col)
-            sqlParams = append(sqlParams, value)
-            currentParam+=2
-        } else {
-            sqlWhere += "\"$" + strconv.Itoa(currentParam) + "\" " + operator + " $" + strconv.Itoa(currentParam+1)
-            sqlParams = append(sqlParams, key)
-            sqlParams = append(sqlParams, value)
-            currentParam+=2
-        }
-    }
-    if sqlWhere != "" {
-        sqlWhere += "\n"
-    }
-
-    return sqlWhere, sqlParams
 }
 
 func (db *PostgresDB) parseResults(r *sql.Rows) []DBResult {

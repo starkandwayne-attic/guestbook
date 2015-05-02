@@ -1,11 +1,11 @@
 package main
 
 import (
-    _ "github.com/starkandwayne/guestbook/api/database"
+    "github.com/starkandwayne/guestbook/api"
+    "github.com/starkandwayne/guestbook/api/database"
     "github.com/cloudfoundry-community/go-cfenv"
     "github.com/gorilla/mux"
     "flag"
-    "fmt"
     "log"
     "net/http"
     _"strings"
@@ -17,7 +17,7 @@ func main() {
     var postgresUri string
     var useCFEnv bool
 
-    flag.StringVar(&postgresUri, "uri", "postgres://postgres@127.0.0.1:5432/guestbook", "Postgres URI")
+    flag.StringVar(&postgresUri, "uri", "postgres://postgres@127.0.0.1:5432/guestbook?sslmode=disable", "Postgres URI")
     flag.BoolVar(&useCFEnv, "use_cfenv", false, "Use CF Env, overrides other settings")
 
     flag.Parse()
@@ -49,13 +49,12 @@ func main() {
 
 func SubmitHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == "POST" {
-       response := api.PostSubmitHandler(w, r, &DB)
+        api.PostSubmitHandler(w, r, &DB)
     }
 }
 
 func RandomPostHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == "GET" {
-        response := api.GetRandomPostHandler(w, r, &DB)
+        api.GetRandomPostHandler(w, r, &DB)
     }
-    fmt.Fprintf(w, "asdf")
 }

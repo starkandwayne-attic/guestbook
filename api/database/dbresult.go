@@ -1,9 +1,5 @@
 package database
 
-import (
-    "time"
-)
-
 type Result interface {
     GetID() string
     SetID(value string)

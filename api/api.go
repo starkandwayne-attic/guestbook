@@ -1,8 +1,7 @@
 package api
 
 import (
-    "gitlab.swisscloud.io/Integration/qAPI/api/database"
-    "gitlab.swisscloud.io/Integration/qAPI/api/config"
+    "github.com/starkandwayne/guestbook/api/database"
 	"fmt"
     "io/ioutil"
     "encoding/json"
@@ -29,14 +28,13 @@ func ReturnError(err error, w http.ResponseWriter) {
 }
 
 func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
-    var doc database.DBResult
+    var post database.DBResult
 
-    err := UnmarshalBody(r, &doc)
+    post, err := db.SelectRandomPost()
     if err != nil {
         ReturnError(err, w)
         return
     }
-    post := db.SelectRandomPost()
 
     w.Header().Set("Content-Type", "application/json")
     retval, err := json.MarshalIndent(post, "", "    ")
@@ -56,15 +54,19 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
         return
     }
 
-    submitRequest := doc['submit']
-    code := submitRequest['code']
-    name := submitRequest['name']
-    email := submitRequest['email']
-    comment := submitRequest['comment']
-    post_id := submitRequest['post_id']
+    submitRequest := doc["submit"].(map[string]interface{})
+    code := submitRequest["code"].(string)
+    name := submitRequest["name"].(string)
+    email := submitRequest["email"].(string)
+    comment := submitRequest["comment"].(string)
+    post_id := int64(submitRequest["post_id"].(float64))
 
-    post := db.SelectPostById(post_id)
-    alreadyEntered := db.IsEmailAlreadySubmitted(email)
+    post, err := db.SelectPostById(post_id)
+    alreadyEntered, err := db.IsEmailAlreadySubmitted(email, strings.ToLower(r.URL.String()))
+    if err != nil {
+        ReturnError(err, w)
+        return
+    }
 
     w.Header().Set("Content-Type", "application/json")
 
@@ -73,18 +75,18 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
         return
     }
 
-    if strings.ToUpper(post['phrase'].(string)) != strings.ToUpper(code) {
+    if strings.ToUpper(post["phrase"].(string)) != strings.ToUpper(code) {
         fmt.Fprint(w, "{\n\t\"error\": \"Oops! Looks like some supervillain slipped you the wrong code. Make sure you have the right blog post and try again - before it's too late!\"\n}")
         return
     }
 
-    response, err := db.InsertEntry(name, email, comment)
+    response, err := db.InsertEntry(name, email, comment, strings.ToLower(r.URL.String()))
 
     if err != nil {
         ReturnError(err, w)
         return
     }
 
-    fmt.Fprint(w, "{\n\t\"success\": \"Nicely done, " + response['name']  + "!  You now have a new entry in the drawing.\"\n}")
+    fmt.Fprint(w, "{\n\t\"success\": \"Nicely done, " + response["name"].(string)  + "!  You now have a new entry in the drawing.\"\n}")
     return
 }
