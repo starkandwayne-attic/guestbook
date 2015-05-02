@@ -3,6 +3,8 @@ app.controller('HomeCtl', function($scope, $http) {
   $scope.submit_code = function() {
     $scope.error = {};
     $scope.error.status = false;
+    $scope.success = {};
+    $scope.success.status = false;
     submittal = {};
     submittal.code = $scope.code;
     submittal.name = $scope.name;
@@ -13,7 +15,8 @@ app.controller('HomeCtl', function($scope, $http) {
     submit_data.submit = submittal
     $http.post('/submit', submit_data).success(function(data) {
       $scope.submitted = "disabled";
-      $scope.success = true;
+      $scope.success.status = true;
+      $scope.success.message = data.success
     }).
     error(function(data, status) {
       $scope.error.status = true;

@@ -64,7 +64,7 @@
                         </div>
                         <form name="cf" ng-submit="submit_code()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
-                            <div class="alert alert-success" ng-show="success">We are currently creating your Cloud Foundry and email you upon completion.</div>
+                            <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
                             <div class="form-group">
                                 <label>Code</label>
                                 <input ng-model="code"class="form-control input-lg" placeholder="" required/>
