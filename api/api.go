@@ -7,6 +7,7 @@ import (
     "encoding/json"
 	"net/http"
     "strings"
+    "errors"
 )
 
 func UnmarshalBody(r *http.Request, unmarshalTo database.Result) (error) {
@@ -21,10 +22,15 @@ func UnmarshalBody(r *http.Request, unmarshalTo database.Result) (error) {
     return nil
 }
 
-func ReturnError(err error, w http.ResponseWriter) {
+func ReturnError(err error, w http.ResponseWriter, err_no int) {
     println("{\n\t\"error\": \"" + err.Error() + "\"\n}")
     w.Header().Set("Content-Type", "application/json")
-    fmt.Fprint(w, "{\n\t\"error\": \"Egads!  Some supervillain blew up our application - please let our daring superheroes know so they can make things right.\"\n}")
+    w.WriteHeader(err_no)
+    if err_no == 500 {
+        fmt.Fprint(w, "{\n\t\"error\": \"Egads!  Some supervillain blew up our application - please let our daring superheroes know so they can make things right.\"\n}")
+    } else {
+        fmt.Fprint(w, "{\n\t\"error\": \"" + err.Error()  + "\"\n}")
+    }
 }
 
 func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
@@ -32,14 +38,14 @@ func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.P
 
     post, err := db.SelectRandomPost()
     if err != nil {
-        ReturnError(err, w)
+        ReturnError(err, w, 500)
         return
     }
 
     w.Header().Set("Content-Type", "application/json")
     retval, err := json.MarshalIndent(post, "", "    ")
     if err != nil {
-        ReturnError(err, w)
+        ReturnError(err, w, 500)
         return
     }
     fmt.Fprint(w, string(retval))
@@ -50,7 +56,7 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
 
     err := UnmarshalBody(r, &doc)
     if err != nil {
-        ReturnError(err, w)
+        ReturnError(err, w, 500)
         return
     }
 
@@ -65,26 +71,28 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
     url := strings.ToLower(appName)
     alreadyEntered, err := db.IsEmailAlreadySubmitted(email, url)
     if err != nil {
-        ReturnError(err, w)
+        ReturnError(err, w, 500)
         return
     }
 
     w.Header().Set("Content-Type", "application/json")
 
     if alreadyEntered {
-        fmt.Fprint(w, "{\n\t\"error\": \"What treachery is this?!  You have already entered the drawing.  Don't make us send our sidekick after you!\"\n}")
+        err = errors.New("What treachery is this?!  You have already entered the drawing.  Don't make us send our sidekick after you!")
+        ReturnError(err, w, 403)
         return
     }
 
     if strings.ToUpper(post["phrase"].(string)) != strings.ToUpper(code) {
-        fmt.Fprint(w, "{\n\t\"error\": \"Oops! Looks like some supervillain slipped you the wrong code. Make sure you have the right blog post and try again - before it's too late!\"\n}")
+        err = errors.New("Oops! Looks like some supervillain slipped you the wrong code. Make sure you have the right blog post and try again - before it's too late!")
+        ReturnError(err, w, 403)
         return
     }
 
     response, err := db.InsertEntry(name, email, comment, url)
 
     if err != nil {
-        ReturnError(err, w)
+        ReturnError(err, w, 500)
         return
     }
 

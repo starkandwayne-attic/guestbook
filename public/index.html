@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="trycf">
+<html lang="en" ng-app="guestbook">
 
     <head>
         <meta charset="utf-8">
@@ -15,7 +15,7 @@
         <!-- Add custom CSS here -->
         <link href="css/stylish-portfolio.css" rel="stylesheet">
         <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet">
-        <link href="css/trycf.css" rel="stylesheet">
+        <link href="css/guestbook.css" rel="stylesheet">
     </head>
 
     <body ng-controller="HomeCtl">
@@ -62,7 +62,7 @@
                         <div class="well">
                           <p class="text-justify">Click on the link below to read one of the very informative and helpful blog posts put together by the team at Stark & Wayne. Embedded in this post is a code. Enter this code, along with your name and email address.  If you have the correct code, you will be entered into our drawing.  If you have any ideas on how we can help you become a Superhero, please let us know!</p>
                         </div>
-                        <form name="cf" ng-submit="deploy_cf()" >
+                        <form name="cf" ng-submit="submit_code()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
                             <div class="alert alert-success" ng-show="success">We are currently creating your Cloud Foundry and email you upon completion.</div>
                             <div class="form-group">
@@ -79,7 +79,7 @@
                             </div>
                              <div class="form-group">
                                 <label>How Can We Help?</label>
-                                <textarea class="form-control input-lg" placeholder=""></textarea>
+                                <textarea ng-model="comment" class="form-control input-lg" placeholder=""></textarea>
                             </div>
                             <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit</button>
                         </form>

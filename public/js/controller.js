@@ -1,13 +1,17 @@
 app.controller('HomeCtl', function($scope, $http) {
   $scope.submitted = "";
-  $scope.deploy_cf = function() {
+  $scope.submit_code = function() {
     $scope.error = {};
     $scope.error.status = false;
-    deploy = {};
-    deploy.aws_access_key = $scope.aws_access_key;
-    deploy.aws_secret_key = $scope.aws_secret_key;
-    deploy.email = $scope.email;
-    $http.post('/deploy', deploy).success(function(data) {
+    submittal = {};
+    submittal.code = $scope.code;
+    submittal.name = $scope.name;
+    submittal.email = $scope.email;
+    submittal.comment = $scope.comment;
+    submittal.post_id = 2;
+    submit_data = {}
+    submit_data.submit = submittal
+    $http.post('/submit', submit_data).success(function(data) {
       $scope.submitted = "disabled";
       $scope.success = true;
     }).

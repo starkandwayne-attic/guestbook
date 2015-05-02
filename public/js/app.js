@@ -1,1 +1,1 @@
-var app = angular.module('trycf', []);
+var app = angular.module('guestbook', []);
