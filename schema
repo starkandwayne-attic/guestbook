@@ -1,0 +1,27 @@
+﻿CREATE TABLE entries
+(
+  id bigserial PRIMARY KEY,
+  fname text,
+  lname text,
+  email text,
+  contact bool,
+  comment text
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE entries
+  OWNER TO postgres;
+
+CREATE TABLE posts
+(
+  id bigserial PRIMARY KEY,
+  url text,
+  title text,
+  phrase text
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE entries
+  OWNER TO postgres;

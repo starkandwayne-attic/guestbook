@@ -1,0 +1,40 @@
+.navbar-brand {
+  background-image: url('/img/logo-50x50.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 0px 30px;
+  margin-right: -5px;
+}
+
+@media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
+  .navbar-brand {
+    background-image: url('/img/logo-50x50@2x.png');
+    background-size:50px 50px;
+  }
+}
+
+.navbar-default {
+    background-color: #fff;
+    border-bottom: 2px solid #083f7b;
+}
+
+.navbar-default .navbar-nav > li > a {
+  font-size: 16px;
+  color: #1b7bc4;
+}
+
+.navbar-default .navbar-nav > li > a:hover {
+  color: #0f436a;
+}
+
+.btn-primary {
+    border-width: 1px;
+  border-color: rgb(27, 123, 196) rgb(27, 123, 196) rgb(21, 95, 151);
+  border-style: solid;
+  background: rgb(137, 195, 239);
+  background: -webkit-linear-gradient(270deg, rgb(137, 195, 239) 0%, rgb(27, 123, 196) 100%) rgb(222, 222, 222);
+  background:    -moz-linear-gradient(270deg, rgb(137, 195, 239) 0%, rgb(27, 123, 196) 100%) rgb(222, 222, 222);
+  background:      -o-linear-gradient(270deg, rgb(137, 195, 239) 0%, rgb(27, 123, 196) 100%) rgb(222, 222, 222);
+  background:     -ms-linear-gradient(270deg, rgb(137, 195, 239) 0%, rgb(27, 123, 196) 100%) rgb(222, 222, 222);
+  background:         linear-gradient(180deg, rgb(137, 195, 239) 0%, rgb(27, 123, 196) 100%) rgb(222, 222, 222);
+}
