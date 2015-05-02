@@ -45,7 +45,7 @@ func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.P
     fmt.Fprint(w, string(retval))
 }
 
-func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
+func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB, appName string) {
     var doc database.DBResult
 
     err := UnmarshalBody(r, &doc)
@@ -62,7 +62,8 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
     post_id := int64(submitRequest["post_id"].(float64))
 
     post, err := db.SelectPostById(post_id)
-    alreadyEntered, err := db.IsEmailAlreadySubmitted(email, strings.ToLower(r.URL.String()))
+    url := strings.ToLower(appName)
+    alreadyEntered, err := db.IsEmailAlreadySubmitted(email, url)
     if err != nil {
         ReturnError(err, w)
         return
@@ -80,7 +81,7 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
         return
     }
 
-    response, err := db.InsertEntry(name, email, comment, strings.ToLower(r.URL.String()))
+    response, err := db.InsertEntry(name, email, comment, url)
 
     if err != nil {
         ReturnError(err, w)

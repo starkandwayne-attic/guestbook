@@ -8,17 +8,20 @@ import (
     "flag"
     "log"
     "net/http"
-    _"strings"
+    "strconv"
 )
 
 var DB database.PostgresDB
+var postgresUri string
+var appName string
+var useCFEnv bool
+var port int
 
 func main() {
-    var postgresUri string
-    var useCFEnv bool
-
     flag.StringVar(&postgresUri, "uri", "postgres://postgres@127.0.0.1:5432/guestbook?sslmode=disable", "Postgres URI")
     flag.BoolVar(&useCFEnv, "use_cfenv", false, "Use CF Env, overrides other settings")
+    flag.StringVar(&appName, "app_name", "guestbook", "Application Name")
+    flag.IntVar(&port, "port", 8080, "Application Port")
 
     flag.Parse()
 
@@ -34,6 +37,8 @@ func main() {
         } else {
             log.Fatal("Unable to get cf env")
         }
+        //TODO:  Get application name from application_name in VCAP_APPLICATION
+        //TODO:  Get port from port in VCAP_APPLICATION
     }
 
     DB = database.UsePostgresDB(postgresUri)
@@ -44,12 +49,12 @@ func main() {
     http.Handle("/", r)
     http.HandleFunc("/submit", SubmitHandler)
     http.HandleFunc("/posts/random", RandomPostHandler)
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":" + strconv.Itoa(port), nil)
 }
 
 func SubmitHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == "POST" {
-        api.PostSubmitHandler(w, r, &DB)
+        api.PostSubmitHandler(w, r, &DB, appName)
     }
 }
 
