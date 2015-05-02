@@ -29,30 +29,60 @@ func (db *PostgresDB) connect() (*sql.DB, error) {
     return conn, nil
 }
 
-func (db *PostgresDB) SelectLatest(selectFrom string, query map[string]interface{}, selectTo *[]DBResult) (error) {
-    strParams, err := json.Marshal(query)
+
+func (db *PostgresDB) SelectPostById(post_id string) (*database.DBResult, error) {
+    docCollection := make([]database.DBResult,0)
+
+    sqlQuery := "SELECT id, url, title, phrase FROM posts WHERE id = $1"
+
+    sqlParams := make([]interface{},1)
+    sqlParams[0] = post_id
+
+    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
-        return err
+        return database.DBResult{}, err
     }
-    sqlQuery := "SELECT * FROM select_latest($1, $2)"
+    if len(docCollection) > 0 {
+        return &docCollection[0]
+    }
+}
+
+func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool) {
+    docCollection := make([]database.DBResult,0)
+
+    sqlQuery := "SELECT id FROM entries WHERE email = $1 AND url = $2"
+
+    sqlParams := make([]interface{},2)
+    sqlParams[0] = email
+    sqlParams[1] = url
+
+    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
+    if err != nil {
+        return database.DBResult{}, err
+    }
+    if len(docCollection) > 0 {
+        return true
+    }
+    return false
+}
+
+func (db *PostgresDB) SelectRandomPost() (*database.DBResult, error) {
+    docCollection := make([]database.DBResult,0)
+
+    sqlQuery := "SELECT id, url, title FROM posts p, "
+    sqlQuery += "(SELECT cast(trunc(random() * count(*) + 1) as bigint) as post_id FROM posts) rand_id "
+    sqlQuery += "WHERE p.id = rand_id.post_id;"
+
     sqlParams := make([]interface{},0)
-    sqlParams = append(sqlParams, selectFrom, strParams)
 
-    return db.doselect(sqlQuery, sqlParams, selectTo)
-}
-
-func (db *PostgresDB) SelectFirst(selectFrom string, query map[string]interface{}, selectTo *DBResult) (error) {
-    selectResults := make([]DBResult,0)
-    err := db.SelectLatest(selectFrom, query, &selectResults)
+    err := api.DB.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
-        return err
+        return database.DBResult{}, err
     }
-    if len(selectResults) > 0 {
-        *selectTo = selectResults[0]
+    if len(docCollection) > 0 {
+        return &docCollection[0]
     }
-    return nil
 }
-
 
 func (db *PostgresDB) DoSelect(query string, queryParams []interface{}, selectTo *[]DBResult) (error) {
 	return db.doselect(query, queryParams, selectTo)
@@ -83,34 +113,6 @@ func (db *PostgresDB) doselect(query string, queryParams []interface{}, selectTo
     }
     *selectTo = retval
     return nil
-}
-
-// added by steve
-func (db *PostgresDB) Delete(deleteFrom string, id string, selectTo *DBResult) (error) {
-    session, err := db.connect()
-    if err != nil {
-        return err
-    }
-    defer session.Close()
-
-	deleteQuery := "DELETE FROM " + deleteFrom + " WHERE id = '" + id + "'"
-
-    results, err := session.Query(deleteQuery)
-    if err != nil {
-        return err
-    }
-
-	parsedResults := db.parseResults(results)
-    retval := make([]DBResult,0)
-    for _, res := range parsedResults {
-        var dbr DBResult
-        err = json.Unmarshal([]byte(res["content"].(string)), &dbr)
-        if err != nil {
-            return err
-        }
-        retval = append(retval, dbr)
-    }
-	return nil
 }
 
 func (db *PostgresDB) Insert(insertInto string, insertObject DBResult, selectTo *DBResult) (error) {

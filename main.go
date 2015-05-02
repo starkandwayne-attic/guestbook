@@ -55,7 +55,7 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 func RandomPostHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == "GET" {
-        
+        response := api.GetRandomPostHandler(w, r, &DB)
     }
     fmt.Fprintf(w, "asdf")
 }
