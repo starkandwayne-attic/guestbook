@@ -63,6 +63,7 @@
                           <p class="text-justify">Click on the link below to read one of the very informative and helpful blog posts put together by the team at Stark & Wayne. Embedded in this post is a code. Enter this code, along with your name and email address.  If you have the correct code, you will be entered into our drawing.  If you have any ideas on how we can help you become a Superhero, please let us know!</p>
                         </div>
                         <a href="{{post_url}}">{{post_title}}</a>
+                        <br>&nbsp;
                         <form name="cf" ng-submit="submit_code()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
                             <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
