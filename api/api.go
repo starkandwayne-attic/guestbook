@@ -64,7 +64,12 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
     code := submitRequest["code"].(string)
     name := submitRequest["name"].(string)
     email := submitRequest["email"].(string)
-    comment := submitRequest["comment"].(string)
+
+    comment := ""
+    _, hasComment := submitRequest["comment"]
+    if hasComment {
+        comment = submitRequest["comment"].(string)
+    }
     post_id := int64(submitRequest["post_id"].(float64))
 
     post, err := db.SelectPostById(post_id)
