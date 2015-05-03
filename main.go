@@ -42,7 +42,7 @@ func main() {
     }
 
     DB = database.UsePostgresDB(postgresUri)
-    //DB.EnsureStructure()
+    DB.EnsureStructure()
     r := mux.NewRouter()
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
