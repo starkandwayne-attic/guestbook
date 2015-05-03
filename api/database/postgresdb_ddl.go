@@ -30,8 +30,6 @@ func (db *PostgresDB) CreateEntriesTable() (error) {
     sqlCreateTable += "WITH (\n"
     sqlCreateTable += "     OIDS=FALSE\n"
     sqlCreateTable += ");\n"
-    sqlCreateTable += "ALTER TABLE entries\n"
-    sqlCreateTable += "OWNER TO postgres;"
 
     session, err := db.connect()
     if err != nil {
@@ -59,8 +57,6 @@ func (db *PostgresDB) CreatePostsTable() (error) {
     sqlCreateTable += "WITH (\n"
     sqlCreateTable += "     OIDS=FALSE\n"
     sqlCreateTable += ");\n"
-    sqlCreateTable += "ALTER TABLE posts\n"
-    sqlCreateTable += "OWNER TO postgres;"
 
     session, err := db.connect()
     if err != nil {

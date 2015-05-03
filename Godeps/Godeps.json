@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/starkandwayne/guestbook",
+	"GoVersion": "go1.3.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/cloudfoundry-community/go-cfenv",
+			"Comment": "v1.3-12-ga8ee390",
+			"Rev": "a8ee39047929b383cf4edeb8cb16a27cddea77be"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "8a875a034c69b940914d83ea03d3f1299b4d094b"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Rev": "6c54219055243614d4eaffea55917c15bea2ba2f"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "743fcf103ac7cdbc159e540d9d0e3a7889b87d68"
+		}
+	]
+}

@@ -8,24 +8,26 @@ import (
     "flag"
     "log"
     "net/http"
+    "os"
     "strconv"
 )
 
 var DB database.PostgresDB
 var postgresUri string
 var appName string
-var useCFEnv bool
 var port int
 
 func main() {
     flag.StringVar(&postgresUri, "uri", "postgres://postgres@127.0.0.1:5432/guestbook?sslmode=disable", "Postgres URI")
-    flag.BoolVar(&useCFEnv, "use_cfenv", false, "Use CF Env, overrides other settings")
     flag.StringVar(&appName, "app_name", "guestbook", "Application Name")
     flag.IntVar(&port, "port", 8080, "Application Port")
 
     flag.Parse()
 
-    if useCFEnv {
+    println("Starting Guestbook Application...")
+
+    if os.Getenv("VCAP_APPLICATION") != "" {
+        println("Parsing Cloud Foundry environment variables...")
         appEnv, enverr := cfenv.Current()
         if enverr != nil {
             log.Fatal("CF Env not found")
@@ -37,18 +39,25 @@ func main() {
         } else {
             log.Fatal("Unable to get cf env")
         }
-        //TODO:  Get application name from application_name in VCAP_APPLICATION
-        //TODO:  Get port from port in VCAP_APPLICATION
+        appName = appEnv.Name
+        port = appEnv.Port
+    } else {
+        println("Using Default or Parameter settings.")
     }
 
     DB = database.UsePostgresDB(postgresUri)
-    DB.EnsureStructure()
+    err := DB.EnsureStructure()
+    if err != nil {
+        log.Fatal(err)
+    }
     r := mux.NewRouter()
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
     http.Handle("/", r)
     http.HandleFunc("/submit", SubmitHandler)
     http.HandleFunc("/posts/random", RandomPostHandler)
+
+    println("Listening on Port " + strconv.Itoa(port))
     http.ListenAndServe(":" + strconv.Itoa(port), nil)
 }
 
