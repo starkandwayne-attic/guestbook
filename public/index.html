@@ -62,8 +62,6 @@
                         <div class="well">
                           <p class="text-justify">Click on the link below to read one of the very informative and helpful blog posts put together by the team at Stark & Wayne. Embedded in this post is a code. Enter this code, along with your name and email address.  If you have the correct code, you will be entered into our drawing.  If you have any ideas on how we can help you become a Superhero, please let us know!</p>
                         </div>
-                        <a href="{{post_url}}">{{post_title}}</a>
-                        <br>&nbsp;
                         <form name="contactinfo" ng-submit="submit_email()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
                             <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
@@ -79,15 +77,16 @@
                                 <label>How Can We Help?</label>
                                 <textarea ng-model="comment" class="form-control input-lg" placeholder=""></textarea>
                             </div>
-                            <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit Email Address</button>
+                            <button class="btn btn-lg btn-primary btn-block" ng-class="email_form.submitted" >Submit Email Address</button>
                         </form>
-                         <form name="code" ng-submit="submit_code()" >
-                            <a href="{{post_url}}">{{post_title}}</a>
+                        <br>&nbsp;
+                        <a href="{{post_url}}">{{post_title}}</a>
+                        <form name="code" ng-submit="submit_code()" >
                             <div class="form-group">
                                 <label>Code</label>
-                                <input ng-model="code"class="form-control input-lg" placeholder="" required/>
+                                <input ng-model="code" class="form-control input-lg" placeholder="" required/>
                             </div>
-                            <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit Code</button>
+                            <button class="btn btn-lg btn-primary btn-block" ng-class="code_form.submitted" >Submit Code</button>
                         </form>
                       </div>
                     </div>
@@ -170,7 +169,7 @@
          $(".btn-toggle").click(function(){
              $("#collapseOne").collapse('toggle');
          });
-
+    });
     </script>
 
     <script>

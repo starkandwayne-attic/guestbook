@@ -137,7 +137,7 @@ func (db *PostgresDB) Create_select_remaining_posts_for_email_Function() (error)
     sqlCreateFunc += "  RETURNS TABLE(row_num bigint, id bigint, url text, title text, phrase text) AS\n"
     sqlCreateFunc += "$BODY$\n"
     sqlCreateFunc += "BEGIN\n"
-    sqlCreateFunc += "    RETURN QUERY SELECT row_number() over (order by p.id) AS row_num, p.* FROM posts p\n"
+    sqlCreateFunc += "    RETURN QUERY SELECT row_number() over (order by p.id) AS row_num, p.id, p.url, p.title, p.phrase FROM posts p\n"
     sqlCreateFunc += "    WHERE NOT EXISTS(SELECT entries.id FROM entries where entries.post_id = p.id AND entries.email = email_address);\n"
     sqlCreateFunc += "END; $BODY$\n"
     sqlCreateFunc += "  LANGUAGE plpgsql VOLATILE\n"

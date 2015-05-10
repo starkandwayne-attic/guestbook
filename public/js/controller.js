@@ -1,5 +1,8 @@
 app.controller('HomeCtl', function($scope, $http) {
-  $scope.submitted = "";
+  $scope.email_form = {}
+  $scope.email_form.submitted = "";
+  $scope.code_form = {}
+  $scope.code_form.submitted = "";
   $scope.post_id = -1;
   $scope.post_url = "";
   $scope.post_title = "";
@@ -15,12 +18,12 @@ app.controller('HomeCtl', function($scope, $http) {
     submit_data = {}
     submit_data.submit = submittal
     $http.post('/submit/email', submit_data).success(function(data) {
-      $scope.submitted = "disabled";
+      $scope.email_form.submitted = "disabled";
       $scope.success.status = true;
       $scope.success.message = data.success
       $scope.post_id = data.id;
       $scope.post_url = data.url;
-      $scope.post_title = data.title;
+      $scope.post_title = "READ THIS POST:  ".concat(data.title);
     }).
     error(function(data, status) {
       $scope.error.status = true;
@@ -38,7 +41,7 @@ app.controller('HomeCtl', function($scope, $http) {
     submit_data = {}
     submit_data.submit = submittal
     $http.post('/submit/code', submit_data).success(function(data) {
-      $scope.submitted = "disabled";
+      $scope.code_form.submitted = "disabled";
       $scope.success.status = true;
       $scope.success.message = data.success
     }).

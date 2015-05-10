@@ -73,6 +73,7 @@ func PostSubmitEmailHandler(w http.ResponseWriter, r *http.Request, db *database
     post["entry_id"] = entry["id"]
     delete(post, "phrase")
     delete(post, "row_num")
+    delete(post, "orig_id")
 
     w.Header().Set("Content-Type", "application/json")
     retval, err := json.MarshalIndent(post, "", "    ")
