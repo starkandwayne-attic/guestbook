@@ -13,6 +13,10 @@ func (db *PostgresDB) EnsureStructure() (error) {
     if err != nil {
         return err
     }
+    err = db.Create_select_remaining_posts_for_email_Function()
+    if err != nil {
+        return err
+    }
     return nil
 }
 
@@ -22,9 +26,9 @@ func (db *PostgresDB) CreateEntriesTable() (error) {
     sqlCreateTable += "     id bigserial NOT NULL,\n"
     sqlCreateTable += "     name text,\n"
     sqlCreateTable += "     email text,\n"
-    sqlCreateTable += "     contact boolean,\n"
     sqlCreateTable += "     comment text,\n"
-    sqlCreateTable += "     url text,\n"
+    sqlCreateTable += "     post_id int,\n"
+    sqlCreateTable += "     entered bool DEFAULT FALSE,\n"
     sqlCreateTable += "     CONSTRAINT entries_pkey PRIMARY KEY (id)\n"
     sqlCreateTable += ")\n"
     sqlCreateTable += "WITH (\n"
@@ -95,4 +99,32 @@ func (db *PostgresDB) TableExists(name string) (bool) {
         return true
     }
     return false
+}
+
+func (db *PostgresDB) Create_select_remaining_posts_for_email_Function() (error) {
+    sqlCreateFunc := "CREATE OR REPLACE FUNCTION select_remaining_posts_for_email(IN email_address text)\n"
+    sqlCreateFunc += "  RETURNS TABLE(row_num bigint, id bigint, url text, title text, phrase text) AS\n"
+    sqlCreateFunc += "$BODY$\n"
+    sqlCreateFunc += "BEGIN\n"
+    sqlCreateFunc += "    RETURN QUERY SELECT row_number() over (order by p.id) AS row_num, p.* FROM posts p\n"
+    sqlCreateFunc += "    WHERE NOT EXISTS(SELECT entries.id FROM entries where entries.post_id = p.id AND entries.email = email_address);\n"
+    sqlCreateFunc += "END; $BODY$\n"
+    sqlCreateFunc += "  LANGUAGE plpgsql VOLATILE\n"
+    sqlCreateFunc += "  COST 100\n"
+    sqlCreateFunc += "  ROWS 1000;\n"
+    sqlCreateFunc += "ALTER FUNCTION select_remaining_posts_for_email(text)\n"
+    sqlCreateFunc += "  OWNER TO postgres;"
+
+    session, err := db.connect()
+    if err != nil {
+        return err
+    }
+    defer session.Close()
+
+    _, err = session.Exec(sqlCreateFunc)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

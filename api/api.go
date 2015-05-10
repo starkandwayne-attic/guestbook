@@ -33,14 +33,46 @@ func ReturnError(err error, w http.ResponseWriter, err_no int) {
     }
 }
 
-func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
-    var post database.DBResult
+func PostSubmitEmailHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
+    var doc database.DBResult
 
-    post, err := db.SelectRandomPost()
+    err := UnmarshalBody(r, &doc)
     if err != nil {
         ReturnError(err, w, 500)
         return
     }
+
+    submitRequest := doc["submit"].(map[string]interface{})
+    name := submitRequest["name"].(string)
+    email := submitRequest["email"].(string)
+    comment := ""
+    _, hasComment := submitRequest["comment"]
+    if hasComment {
+        comment = submitRequest["comment"].(string)
+    }
+
+    post, err := db.SelectRandomPost(email)
+    if err != nil {
+        if err.Error() == "No posts found!" {
+            noposts_err := errors.New("Wow - you read our entire blog?  Congratulations - you truly are a superhero!")
+            ReturnError(noposts_err, w, 403)
+            return
+        }
+        ReturnError(err, w, 500)
+        return
+    }
+    post_id := post["id"].(int64)
+
+    entry, err := db.InsertEntry(name, email, comment, post_id)
+
+    if err != nil {
+        ReturnError(err, w, 500)
+        return
+    }
+
+    post["entry_id"] = entry["id"]
+    delete(post, "phrase")
+    delete(post, "row_num")
 
     w.Header().Set("Content-Type", "application/json")
     retval, err := json.MarshalIndent(post, "", "    ")
@@ -51,7 +83,7 @@ func GetRandomPostHandler(w http.ResponseWriter, r *http.Request, db *database.P
     fmt.Fprint(w, string(retval))
 }
 
-func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB, appName string) {
+func PostSubmitEntryHandler(w http.ResponseWriter, r *http.Request, db *database.PostgresDB) {
     var doc database.DBResult
 
     err := UnmarshalBody(r, &doc)
@@ -62,19 +94,17 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
 
     submitRequest := doc["submit"].(map[string]interface{})
     code := submitRequest["code"].(string)
-    name := submitRequest["name"].(string)
+    entry_id := int64(submitRequest["entry_id"].(float64))
+    post_id := int64(submitRequest["post_id"].(float64))
     email := submitRequest["email"].(string)
 
-    comment := ""
-    _, hasComment := submitRequest["comment"]
-    if hasComment {
-        comment = submitRequest["comment"].(string)
+    alreadyEntered, err := db.IsEmailAlreadySubmitted(email, post_id)
+    if err != nil {
+        ReturnError(err, w, 500)
+        return
     }
-    post_id := int64(submitRequest["post_id"].(float64))
 
     post, err := db.SelectPostById(post_id)
-    url := strings.ToLower(appName)
-    alreadyEntered, err := db.IsEmailAlreadySubmitted(email, url)
     if err != nil {
         ReturnError(err, w, 500)
         return
@@ -94,7 +124,7 @@ func PostSubmitHandler(w http.ResponseWriter, r *http.Request, db *database.Post
         return
     }
 
-    response, err := db.InsertEntry(name, email, comment, url)
+    response, err := db.ValidateEntry(entry_id, post_id)
 
     if err != nil {
         ReturnError(err, w, 500)

@@ -54,21 +54,21 @@ func main() {
     r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
     http.Handle("/", r)
-    http.HandleFunc("/submit", SubmitHandler)
-    http.HandleFunc("/posts/random", RandomPostHandler)
+    http.HandleFunc("/submit/entry", SubmitEntryHandler)
+    http.HandleFunc("/submit/email", SubmitEmailHandler)
 
     println("Listening on Port " + strconv.Itoa(port))
     http.ListenAndServe(":" + strconv.Itoa(port), nil)
 }
 
-func SubmitHandler(w http.ResponseWriter, r *http.Request) {
+func SubmitEntryHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method == "POST" {
-        api.PostSubmitHandler(w, r, &DB, appName)
+        api.PostSubmitEntryHandler(w, r, &DB)
     }
 }
 
-func RandomPostHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method == "GET" {
-        api.GetRandomPostHandler(w, r, &DB)
+func SubmitEmailHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == "POST" {
+        api.PostSubmitEmailHandler(w, r, &DB)
     }
 }

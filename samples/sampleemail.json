@@ -1,9 +1,7 @@
 {
     "submit": {
-        "code": "fnord",
         "name": "Jeremy Budnack",
         "email": "jrbudnack@gmail.com",
-        "comment": "Yes, I would like to know more!",
-        "post_id": 2
+        "comment": "Yes, I would like to know more!"
     }
 }

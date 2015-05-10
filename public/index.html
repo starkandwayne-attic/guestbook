@@ -64,13 +64,9 @@
                         </div>
                         <a href="{{post_url}}">{{post_title}}</a>
                         <br>&nbsp;
-                        <form name="cf" ng-submit="submit_code()" >
+                        <form name="contactinfo" ng-submit="submit_email()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
                             <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
-                            <div class="form-group">
-                                <label>Code</label>
-                                <input ng-model="code"class="form-control input-lg" placeholder="" required/>
-                            </div>
                             <div class="form-group">
                                 <label>Name</label>
                                 <input ng-model="name" class="form-control input-lg" placeholder="" required/>
@@ -83,7 +79,15 @@
                                 <label>How Can We Help?</label>
                                 <textarea ng-model="comment" class="form-control input-lg" placeholder=""></textarea>
                             </div>
-                            <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit</button>
+                            <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit Email Address</button>
+                        </form>
+                         <form name="code" ng-submit="submit_code()" >
+                            <a href="{{post_url}}">{{post_title}}</a>
+                            <div class="form-group">
+                                <label>Code</label>
+                                <input ng-model="code"class="form-control input-lg" placeholder="" required/>
+                            </div>
+                            <button class="btn btn-lg btn-primary btn-block" ng-class="submitted" >Submit Code</button>
                         </form>
                       </div>
                     </div>

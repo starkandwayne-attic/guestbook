@@ -42,14 +42,14 @@ func (db *PostgresDB) SelectPostById(post_id int64) (DBResult, error) {
     return DBResult{}, errors.New("No posts found with that id!")
 }
 
-func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool, error) {
+func (db *PostgresDB) IsEmailAlreadySubmitted(email string, post_id int64) (bool, error) {
     docCollection := make([]DBResult,0)
 
-    sqlQuery := "SELECT id FROM entries WHERE email = $1 AND url = $2"
+    sqlQuery := "SELECT id FROM entries WHERE email = $1 AND post_id = $2 AND entered = TRUE"
 
     sqlParams := make([]interface{},2)
     sqlParams[0] = email
-    sqlParams[1] = url
+    sqlParams[1] = post_id
 
     err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
@@ -61,14 +61,15 @@ func (db *PostgresDB) IsEmailAlreadySubmitted(email string, url string) (bool, e
     return false, nil
 }
 
-func (db *PostgresDB) SelectRandomPost() (DBResult, error) {
+func (db *PostgresDB) SelectRandomPost(email string) (DBResult, error) {
     docCollection := make([]DBResult,0)
 
-    sqlQuery := "SELECT id, url, title FROM posts p, "
-    sqlQuery += "(SELECT cast(trunc(random() * count(*) + 1) as bigint) as post_id FROM posts) rand_id "
-    sqlQuery += "WHERE p.id = rand_id.post_id;"
+    sqlQuery := "SELECT * FROM select_remaining_posts_for_email($1) remaining_posts,\n"
+    sqlQuery += "(SELECT cast(trunc(random() * count(*) + 1) as bigint) as row_num FROM select_remaining_posts_for_email($1)) random_post\n"
+    sqlQuery += "WHERE remaining_posts.row_num = random_post.row_num"
 
-    sqlParams := make([]interface{},0)
+    sqlParams := make([]interface{},1)
+    sqlParams[0] = email
 
     err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
@@ -80,16 +81,16 @@ func (db *PostgresDB) SelectRandomPost() (DBResult, error) {
     return DBResult{}, errors.New("No posts found!")
 }
 
-func (db *PostgresDB) InsertEntry(name string, email string, comment string, url string) (DBResult, error) {
+func (db *PostgresDB) InsertEntry(name string, email string, comment string, post_id int64) (DBResult, error) {
     docCollection := make([]DBResult,0)
 
-    sqlQuery := "INSERT INTO entries (name, email, comment, url) VALUES($1,$2,$3,$4) RETURNING *"
+    sqlQuery := "INSERT INTO entries (name, email, comment, post_id) VALUES($1,$2,$3,$4) RETURNING *"
 
     sqlParams := make([]interface{},4)
     sqlParams[0] = name
     sqlParams[1] = email
     sqlParams[2] = comment
-    sqlParams[3] = url
+    sqlParams[3] = post_id
 
     err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
     if err != nil {
@@ -101,6 +102,23 @@ func (db *PostgresDB) InsertEntry(name string, email string, comment string, url
     return DBResult{}, errors.New("Entry not inserted!")
 }
 
+func (db *PostgresDB) ValidateEntry(entry_id int64, post_id int64) (DBResult, error) {
+    docCollection := make([]DBResult,0)
+
+    sqlQuery := "UPDATE entries SET entered = TRUE WHERE id = $1 RETURNING *"
+
+    sqlParams := make([]interface{},1)
+    sqlParams[0] = entry_id
+
+    err := db.DoSelect(sqlQuery, sqlParams, &docCollection)
+    if err != nil {
+        return DBResult{}, err
+    }
+    if len(docCollection) > 0 {
+        return docCollection[0], nil
+    }
+    return DBResult{}, errors.New("Entry not updated!")
+}
 
 func (db *PostgresDB) DoSelect(query string, queryParams []interface{}, selectTo *[]DBResult) (error) {
 	return db.doselect(query, queryParams, selectTo)
