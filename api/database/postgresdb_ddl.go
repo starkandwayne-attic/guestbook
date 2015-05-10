@@ -13,6 +13,10 @@ func (db *PostgresDB) EnsureStructure() (error) {
     if err != nil {
         return err
     }
+    err = db.CreatePhrasesTable()
+    if err != nil {
+        return err
+    }
     err = db.Create_select_remaining_posts_for_email_Function()
     if err != nil {
         return err
@@ -53,6 +57,7 @@ func (db *PostgresDB) CreatePostsTable() (error) {
     sqlCreateTable := "CREATE TABLE IF NOT EXISTS posts\n"
     sqlCreateTable += "(\n"
     sqlCreateTable += "     id bigserial NOT NULL,\n"
+    sqlCreateTable += "     orig_id integer NOT NULL,\n"
     sqlCreateTable += "     url text,\n"
     sqlCreateTable += "     title text,\n"
     sqlCreateTable += "     phrase text,\n"
@@ -75,6 +80,32 @@ func (db *PostgresDB) CreatePostsTable() (error) {
 
     return nil
 }
+
+func (db *PostgresDB) CreatePhrasesTable() (error) {
+    sqlCreateTable := "CREATE TABLE IF NOT EXISTS phrases\n"
+    sqlCreateTable += "(\n"
+    sqlCreateTable += "     id bigserial NOT NULL,\n"
+    sqlCreateTable += "     phrase text,\n"
+    sqlCreateTable += "     CONSTRAINT phrases_pkey PRIMARY KEY (id)\n"
+    sqlCreateTable += ")\n"
+    sqlCreateTable += "WITH (\n"
+    sqlCreateTable += "     OIDS=FALSE\n"
+    sqlCreateTable += ");\n"
+
+    session, err := db.connect()
+    if err != nil {
+        return err
+    }
+    defer session.Close()
+
+    _, err = session.Exec(sqlCreateTable)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 
 func (db *PostgresDB) TableExists(name string) (bool) {
     sqlCheckForTable := "SELECT 1\n"
