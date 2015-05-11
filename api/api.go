@@ -71,9 +71,11 @@ func PostSubmitEmailHandler(w http.ResponseWriter, r *http.Request, db *database
     }
 
     post["entry_id"] = entry["id"]
+    post["success"] = "The first step is complete - now, click on the link to the blog post to obtain the code!"
     delete(post, "phrase")
     delete(post, "row_num")
     delete(post, "orig_id")
+
 
     w.Header().Set("Content-Type", "application/json")
     retval, err := json.MarshalIndent(post, "", "    ")
@@ -81,6 +83,7 @@ func PostSubmitEmailHandler(w http.ResponseWriter, r *http.Request, db *database
         ReturnError(err, w, 500)
         return
     }
+
     fmt.Fprint(w, string(retval))
 }
 
@@ -132,6 +135,5 @@ func PostSubmitEntryHandler(w http.ResponseWriter, r *http.Request, db *database
         return
     }
 
-    fmt.Fprint(w, "{\n\t\"success\": \"Nicely done, " + response["name"].(string)  + "!  You now have a new entry in the drawing.\"\n}")
-    return
+    fmt.Fprint(w, "{\n\t\"success\": \"Nicely done, " + response["name"].(string)  + "!  You now have a new entry in the drawing.  If you want to keep entering, another link has been generated for you.  Keep reading our posts and collecting those codes so you too can be a superhero!\"\n}")
 }

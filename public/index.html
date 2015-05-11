@@ -62,26 +62,27 @@
                         <div class="well">
                           <p class="text-justify">Click on the link below to read one of the very informative and helpful blog posts put together by the team at Stark & Wayne. Embedded in this post is a code. Enter this code, along with your name and email address.  If you have the correct code, you will be entered into our drawing.  If you have any ideas on how we can help you become a Superhero, please let us know!</p>
                         </div>
-                        <form name="contactinfo" ng-submit="submit_email()" >
+                        <form name="email_form" ng-submit="submit_email()" >
                             <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
                             <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
                             <div class="form-group">
                                 <label>Name</label>
-                                <input ng-model="name" class="form-control input-lg" placeholder="" required/>
+                                <input ng-model="name" class="form-control input-lg" placeholder="" ng-disabled="email_form.submitted" required/>
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
-                                <input ng-model="email" class="form-control input-lg" placeholder="" required/>
+                                <input ng-model="email" class="form-control input-lg" placeholder="" ng-disabled="email_form.submitted" required/>
                             </div>
                              <div class="form-group">
                                 <label>How Can We Help?</label>
-                                <textarea ng-model="comment" class="form-control input-lg" placeholder=""></textarea>
+                                <textarea ng-model="comment" class="form-control input-lg" placeholder="" ng-disabled="email_form.submitted"></textarea>
                             </div>
-                            <button class="btn btn-lg btn-primary btn-block" ng-class="email_form.submitted" >Submit Email Address</button>
+                            <button class="btn btn-lg btn-primary btn-block" ng-disabled="email_form.submitted" >Submit Email Address</button>
                         </form>
-                        <br>&nbsp;
+                        <br>
                         <a href="{{post_url}}">{{post_title}}</a>
-                        <form name="code" ng-submit="submit_code()" >
+                        <br>
+                        <form name="code_form" ng-submit="submit_code()" >
                             <div class="form-group">
                                 <label>Code</label>
                                 <input ng-model="code" class="form-control input-lg" placeholder="" required/>
