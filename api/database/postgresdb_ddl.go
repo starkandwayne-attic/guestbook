@@ -143,8 +143,6 @@ func (db *PostgresDB) Create_select_remaining_posts_for_email_Function() (error)
     sqlCreateFunc += "  LANGUAGE plpgsql VOLATILE\n"
     sqlCreateFunc += "  COST 100\n"
     sqlCreateFunc += "  ROWS 1000;\n"
-    sqlCreateFunc += "ALTER FUNCTION select_remaining_posts_for_email(text)\n"
-    sqlCreateFunc += "  OWNER TO postgres;"
 
     session, err := db.connect()
     if err != nil {
