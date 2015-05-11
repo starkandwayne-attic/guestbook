@@ -69,9 +69,9 @@
                             <li>After submitting a code, a new blog link will generate.  Enter as many times as you'd like (or until we run out of posts).</li>
                           </ol>
                         </div>
-                        <form name="email_form" ng-submit="submit_email()" >
-                            <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
-                            <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
+                        <div class="alert alert-danger" ng-show="error.status">{{error.message}}</div>
+                        <div class="alert alert-success" ng-show="success.status">{{success.message}}</div>
+                        <form name="email_form" ng-submit="submit_email()" ng-hide="email_form.submitted" >
                             <div class="form-group">
                                 <label>Name</label>
                                 <input ng-model="name" class="form-control input-lg" placeholder="" ng-disabled="email_form.submitted" required/>
@@ -86,10 +86,9 @@
                             </div>
                             <button class="btn btn-lg btn-primary btn-block" ng-disabled="email_form.submitted" >Begin</button>
                         </form>
-                        <br>
                         <a href="{{post_url}}">{{post_title}}</a>
                         <br>
-                        <form name="code_form" ng-submit="submit_code()" >
+                        <form name="code_form" ng-submit="submit_code()" ng-show="email_form.submitted" >
                             <div class="form-group">
                                 <label>Code</label>
                                 <input ng-model="code" class="form-control input-lg" placeholder="" required/>

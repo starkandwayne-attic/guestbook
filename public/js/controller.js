@@ -51,6 +51,7 @@ app.controller('HomeCtl', function($scope, $http) {
       $scope.submit_email();
       $scope.success.status = true;
       $scope.success.message = "Correct!  \"".concat($scope.code).concat("\" is the correct code.  ").concat(data.success);
+      $scope.code = "";
     }).
     error(function(data, status) {
       $scope.error.status = true;
